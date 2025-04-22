@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# File with saved peers
+known_peers.json
+
 # Distribution / packaging
 .Python
 build/
