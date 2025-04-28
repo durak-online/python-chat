@@ -25,7 +25,7 @@ class Peer:
         }
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: dict):
         """Creates a friend from JSON data"""
         return cls(data["peer_host"], data["peer_port"])
 
@@ -78,6 +78,12 @@ class PeerBase:
             if peer.host == host:
                 return peer
         return None
+
+    def update_peer(self, host:str, port:int):
+        """If new host, adds it to base"""
+        hosts = [peer.host for peer in self._peers]
+        if host not in hosts:
+            self._peers.append(Peer(host, port))
 
     def clear(self):
         """Clears all base"""
