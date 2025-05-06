@@ -10,6 +10,8 @@ class UserConfig:
     def __init__(self):
         self.username: str = "John Doe"
         self.server_port: int = 8000
+        self.downloads_dir = "./chat_downloads"
+        os.makedirs(self.downloads_dir, exist_ok=True)
         self.load_config()
 
     def load_config(self):

@@ -1,14 +1,22 @@
 import socket
 import re
-
+import os
 from peer_base import PeerBase
 
 MESSAGE_REGEX = re.compile(
-    r"^SENDER:(?P<username>[^ ]+?) "
+    r"SENDER:(?P<username>[^ ]+?) "
     r"(?P<host>[^:]+?):(?P<port>\d+?)"
-    r" \| MESSAGE:(?P<message>.*)$",
-    re.DOTALL
-)
+    r" \| MESSAGE:(?P<message>.+)",
+    re.DOTALL)
+HEADER_REGEX = re.compile(
+    r"SENDER:(?P<username>[^ ]+?) "
+    r"(?P<host>[^:]+?):(?P<port>\d+?)"
+    r" \| FILENAME:(?P<filename>.+)")
+
+MSG_TYPE_TEXT = 0x01
+MSG_TYPE_FILE_META = 0x02
+MSG_TYPE_FILE_DATA = 0x03
+MSG_TYPE_FILE_END = 0x04
 
 
 class Node:
@@ -29,19 +37,58 @@ class Node:
         self.peer_base = PeerBase()
         self.is_running = True
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.current_file: dict = None
 
     def send_message(self, peer_host: str, peer_port: int, message: str):
-        """Sends message to peer"""
+        """Sends a text message to peer"""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.connect((peer_host, peer_port))
                 message = f"SENDER:{self.username} {self.host}:{self.port} | MESSAGE:{message}"
-                s.sendall(message.encode("utf-8"))
+                message_bytes = message.encode("utf-8")
+                data = bytes([MSG_TYPE_TEXT]) \
+                       + len(message_bytes).to_bytes(4, "big") \
+                       + message_bytes
+                s.sendall(data)
             except ConnectionError as e:
                 print(f"Can't send message to {peer_host}:{peer_port}: {e}")
                 raise
 
-    def receive_messages(self):
+    def send_file(self, peer_host: str, peer_port: int, path: str):
+        """Sends file to peer"""
+        print("Sending file...")
+
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((peer_host, peer_port))
+
+                filename = os.path.basename(path)
+                meta_data = (f"SENDER:{self.username} {self.host}:{self.port} | "
+                             f"FILENAME:{filename}").encode("utf-8")
+
+                header = bytes([MSG_TYPE_FILE_META]) \
+                         + len(meta_data).to_bytes(4, "big") \
+                         + meta_data
+                s.sendall(header)
+
+                with open(path, "rb") as file:
+                    while True:
+                        chunk = file.read(4096)
+                        if not chunk:
+                            break
+                        chunk_header = bytes([MSG_TYPE_FILE_DATA]) \
+                                       + len(chunk).to_bytes(4, "big")
+                        s.sendall(chunk_header + chunk)
+
+                end_marker = bytes([MSG_TYPE_FILE_END])
+                s.sendall(end_marker)
+
+        except Exception as e:
+            print(f"Error while sending a file: {e}")
+
+        print("Successfully sent file")
+
+    def receive_messages(self, downloads_path: str):
         """Listens to messages from peers"""
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
@@ -50,25 +97,85 @@ class Node:
             try:
                 conn, addr = self.server_socket.accept()
                 with conn:
+                    buffer = b""
                     while True:
-                        data = conn.recv(1024).decode("utf-8")
+                        data = conn.recv(4096)
                         if not data:
                             break
-                        match = MESSAGE_REGEX.fullmatch(data)
-                        groups = match.groupdict()
-                        print(f"\n{groups['username']} "
-                              f"({groups["host"]}:{groups["port"]}): "
-                              f"{groups["message"]}\n>> ",
-                              end="", flush=True)
-                        self.peer_base.update_peer(
-                            groups["host"], int(groups["port"]), groups["username"]
-                        )
+                        
+                        buffer += data
+                        buffer = self.process_buffer(buffer, downloads_path)
+
             except OSError:
-                # if app will be closed, this error occurs
                 break
+            except Exception as e:
+                print(f"Error while receiving messages: {e}")
 
         if self.server_socket:
             self.server_socket.close()
+
+    def process_buffer(self, buffer: bytes, downloads_path: str):
+        """Reads data from current buffer"""
+        while buffer:
+            if len(buffer) < 5:
+                if buffer[0] == MSG_TYPE_FILE_END:
+                    self.finalize_file()
+                    buffer = b""
+                return buffer
+
+            msg_type = buffer[0]
+            length = int.from_bytes(buffer[1:5], "big")
+
+            if len(buffer) < 5 + length:
+                return buffer
+
+            data = buffer[5:5 + length]
+            buffer = buffer[5 + length:]
+
+            if msg_type == MSG_TYPE_TEXT:
+                self.handle_message(data)
+            elif msg_type == MSG_TYPE_FILE_META:
+                self.handle_file_meta(data, downloads_path)
+            elif msg_type == MSG_TYPE_FILE_DATA:
+                self.current_file["handle"].write(data)
+            elif msg_type == MSG_TYPE_FILE_END:
+                self.finalize_file()
+
+        return buffer
+
+    def handle_file_meta(self, data: bytes, downloads_path: str):
+        """Creates new file using received meta info"""
+        meta = data.decode("utf-8")
+        match = HEADER_REGEX.match(meta)
+        if match:
+            groups = match.groupdict()
+            print(f"Received {groups["filename"]} from {groups["host"]}")
+
+            self.current_file = {
+                "filename": groups["filename"],
+                "handle": open(os.path.join(downloads_path, groups["filename"]), "wb")
+            }
+
+    def finalize_file(self):
+        """Closes file"""
+        if self.current_file:
+            self.current_file["handle"].close()
+            print(f"File {self.current_file["filename"]} was successfully saved")
+            self.current_file = None
+        else:
+            raise ValueError("Received end of file marker, but no file was saving")
+
+    def handle_message(self, data_bytes: bytes):
+        """Prints received message"""
+        data = data_bytes.decode("utf-8")
+        groups = MESSAGE_REGEX.match(data).groupdict()
+        print(f"\n{groups["username"]} "
+              f"({groups["host"]}:{groups["port"]}): "
+              f"{groups["message"]}\n>> ",
+              end="", flush=True)
+        self.peer_base.update_peer(
+            groups["host"], int(groups["port"]), groups["username"]
+        )
 
     def close(self):
         """Closes current node"""

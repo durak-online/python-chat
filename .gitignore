@@ -9,6 +9,7 @@ __pycache__/
 # Chat app files
 known_peers.json
 config.json
+chat_downloads/
 
 # Distribution / packaging
 .Python
