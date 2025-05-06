@@ -147,9 +147,10 @@ class Chat:
             node = Node(port=self.config.server_port,
                         username=self.config.username)
         else:
-            node = Node(host="0.0.0.0", port=self.config.server_port,
-                        username=self.config.username)
             public_ip = socket.gethostbyname(socket.gethostname())
+            node = Node(host="0.0.0.0", port=self.config.server_port,
+                        username=self.config.username, public_ip=public_ip)
+
             print(f"Your IPv4 in current wifi is {public_ip}. Share it with others")
             print(f"Your username is {node.username}")
         return node

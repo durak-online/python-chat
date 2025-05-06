@@ -23,17 +23,20 @@ class Node:
     """A class for single node in P2P chat"""
 
     def __init__(self, host: str = "localhost", port: int = 8000,
-                 username: str = "John Doe"):
+                 username: str = "JohnDoe", public_ip: str = "192.168.0.0"):
         if not isinstance(host, str):
             raise ValueError(f"Host must be string, but was:{host} {type(host)}")
         if not isinstance(port, int):
             raise ValueError(f"Port must be integer, but was:{port} {type(port)}")
         if not isinstance(username, str):
             raise ValueError(f"Username must be string, but was:{username} {type(username)}")
+        if not isinstance(public_ip, str):
+            raise ValueError(f"Public IP must be string, but was:{public_ip} {type(public_ip)}")
 
         self.host = host
         self.port = port
         self.username = username
+        self.public_ip = public_ip
         self.peer_base = PeerBase()
         self.is_running = True
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,7 +47,7 @@ class Node:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.connect((peer_host, peer_port))
-                message = f"SENDER:{self.username} {self.host}:{self.port} | MESSAGE:{message}"
+                message = f"SENDER:{self.username} {self.public_ip}:{self.port} | MESSAGE:{message}"
                 message_bytes = message.encode("utf-8")
                 data = bytes([MSG_TYPE_TEXT]) \
                        + len(message_bytes).to_bytes(4, "big") \
@@ -63,7 +66,7 @@ class Node:
                 s.connect((peer_host, peer_port))
 
                 filename = os.path.basename(path)
-                meta_data = (f"SENDER:{self.username} {self.host}:{self.port} | "
+                meta_data = (f"SENDER:{self.username} {self.public_ip}:{self.port} | "
                              f"FILENAME:{filename}").encode("utf-8")
 
                 header = bytes([MSG_TYPE_FILE_META]) \
@@ -102,7 +105,7 @@ class Node:
                         data = conn.recv(4096)
                         if not data:
                             break
-                        
+
                         buffer += data
                         buffer = self.process_buffer(buffer, downloads_path)
 
