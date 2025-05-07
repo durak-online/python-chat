@@ -115,6 +115,8 @@ class Chat:
 
         if peer:
             self.node.send_message(peer.host, peer.port, message)
+        else:
+            print("There's no such user in your contacts")
 
     def send_file(self, command: str):
         parts = command.split()
@@ -130,6 +132,8 @@ class Chat:
 
         if peer:
             self.node.send_file(peer.host, peer.port, path)
+        else:
+            print("There's no such user in your contacts")
 
     def add_contact(self, command: str):
         parts = command.split()
