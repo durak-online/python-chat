@@ -1,6 +1,10 @@
-import socket
-import re
 import os
+import re
+import socket
+from collections import deque
+from datetime import datetime
+
+from chat_classes import Message
 from peer_base import PeerBase
 
 MESSAGE_REGEX = re.compile(
@@ -22,8 +26,14 @@ MSG_TYPE_FILE_END = 0x04
 class Node:
     """A class for single node in P2P chat"""
 
-    def __init__(self, host: str = "localhost", port: int = 8000,
-                 username: str = "JohnDoe", public_ip: str = "192.168.0.0"):
+    def __init__(
+            self,
+            host: str = "localhost",
+            port: int = 8000,
+            username: str = "JohnDoe",
+            public_ip: str = "192.168.0.0",
+            is_console: bool = False
+    ):
         if not isinstance(host, str):
             raise ValueError(f"Host must be string, but was:{host} {type(host)}")
         if not isinstance(port, int):
@@ -38,9 +48,13 @@ class Node:
         self.username = username
         self.public_ip = public_ip
         self.peer_base = PeerBase()
-        self.is_running = True
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.current_file: dict = None
+        self.new_messages = deque[Message]()
+        self.self = (host, port)
+
+        self._is_running = True
+        self._is_console = is_console
+        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._current_file: dict | None = None
 
     def send_message(self, peer_host: str, peer_port: int, message: str):
         """Sends a text message to peer"""
@@ -93,12 +107,12 @@ class Node:
 
     def receive_messages(self, downloads_path: str):
         """Listens to messages from peers"""
-        self.server_socket.bind((self.host, self.port))
-        self.server_socket.listen()
+        self._server_socket.bind((self.host, self.port))
+        self._server_socket.listen()
 
-        while self.is_running:
+        while self._is_running:
             try:
-                conn, addr = self.server_socket.accept()
+                conn, addr = self._server_socket.accept()
                 with conn:
                     buffer = b""
                     while True:
@@ -114,8 +128,8 @@ class Node:
             except Exception as e:
                 print(f"Error while receiving messages: {e}")
 
-        if self.server_socket:
-            self.server_socket.close()
+        if self._server_socket:
+            self._server_socket.close()
 
     def process_buffer(self, buffer: bytes, downloads_path: str):
         """Reads data from current buffer"""
@@ -140,7 +154,7 @@ class Node:
             elif msg_type == MSG_TYPE_FILE_META:
                 self.handle_file_meta(data, downloads_path)
             elif msg_type == MSG_TYPE_FILE_DATA:
-                self.current_file["handle"].write(data)
+                self._current_file["handle"].write(data)
             elif msg_type == MSG_TYPE_FILE_END:
                 self.finalize_file()
 
@@ -152,19 +166,23 @@ class Node:
         match = HEADER_REGEX.match(meta)
         if match:
             groups = match.groupdict()
-            print(f"Received {groups["filename"]} from {groups["host"]}")
 
-            self.current_file = {
+            if self._is_console:
+                print(f"Received {groups["filename"]} from {groups["host"]}")
+
+            self._current_file = {
                 "filename": groups["filename"],
                 "handle": open(os.path.join(downloads_path, groups["filename"]), "wb")
             }
 
     def finalize_file(self):
         """Closes file"""
-        if self.current_file:
-            self.current_file["handle"].close()
-            print(f"File {self.current_file["filename"]} was successfully saved")
-            self.current_file = None
+        if self._current_file:
+            self._current_file["handle"].close()
+            if self._is_console:
+                print(f"File {self._current_file["filename"]} was successfully saved")
+
+            self._current_file = None
         else:
             raise ValueError("Received end of file marker, but no file was saving")
 
@@ -172,16 +190,32 @@ class Node:
         """Prints received message"""
         data = data_bytes.decode("utf-8")
         groups = MESSAGE_REGEX.match(data).groupdict()
-        print(f"\n{groups["username"]} "
-              f"({groups["host"]}:{groups["port"]}): "
-              f"{groups["message"]}\n>> ",
-              end="", flush=True)
+
+        if self._is_console:
+            print(f"\n{groups["username"]} "
+                  f"({groups["host"]}:{groups["port"]}): "
+                  f"{groups["message"]}\n>> ",
+                  end="", flush=True)
+
         self.peer_base.update_peer(
-            groups["host"], int(groups["port"]), groups["username"]
+            groups["host"],
+            int(groups["port"]),
+            groups["username"]
         )
+        self.new_messages.append(
+            Message(
+                (groups["host"], int(groups["port"])),
+                groups["username"],
+                datetime.now(),
+                groups["message"]
+            )
+        )
+
+    def get_message(self) -> Message:
+        return self.new_messages.popleft()
 
     def close(self):
         """Closes current node"""
-        self.is_running = False
-        if self.server_socket:
-            self.server_socket.close()
+        self._is_running = False
+        if self._server_socket:
+            self._server_socket.close()

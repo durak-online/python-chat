@@ -129,13 +129,13 @@ class NodeTests(unittest.TestCase):
         with open(test_file, "w") as f:
             f.write("test data")
 
-        self.node.current_file = {
+        self.node._current_file = {
             "filename": test_file,
             "handle": open(test_file, "r")
         }
 
         self.node.finalize_file()
-        self.assertIsNone(self.node.current_file)
+        self.assertIsNone(self.node._current_file)
         with self.assertRaises(ValueError):
             self.node.finalize_file()
 

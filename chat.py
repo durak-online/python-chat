@@ -1,13 +1,17 @@
+import argparse
+import socket
 import sys
 from threading import Thread
-import argparse
-from peer_base import Peer
+
+from chat_ui import ChatUI
 from node import Node
+from peer_base import Peer
 from user_config import UserConfig
-import socket
 
 parser = argparse.ArgumentParser(description="Distributed Chat Application")
 parser.add_argument("-l", "--local", action="store_true", help="Run on localhost")
+parser.add_argument("-c", "--console", action="store_true", help="Run without UI")
+parser.add_argument("-p", "--port", type=int, help="Port to run the application on")
 args = parser.parse_args()
 
 
@@ -17,6 +21,7 @@ class Chat:
         self.node = self.get_node()
         self.receive_thread = Thread(target=self.node.receive_messages,
                                      daemon=True, args=(self.config.downloads_dir,))
+        self.receive_thread.start()
 
     @staticmethod
     def print_help():
@@ -34,7 +39,6 @@ class Chat:
     def run(self):
         """Runs chat application"""
         print(f"App starts on {self.node.host}:{self.node.port}")
-        self.receive_thread.start()
 
         try:
             self.chat_cycle()
@@ -147,12 +151,17 @@ class Chat:
 
     def get_node(self) -> Node:
         """Returns new Node instance, which depends on --local argument"""
+        port = self.config.server_port
+        if args.port:
+            port = args.port
+
         if args.local:
-            node = Node(port=self.config.server_port,
-                        username=self.config.username)
+            node = Node(port=port,
+                        username=self.config.username,
+                        public_ip="localhost")
         else:
             public_ip = socket.gethostbyname(socket.gethostname())
-            node = Node(host="0.0.0.0", port=self.config.server_port,
+            node = Node(host="0.0.0.0", port=port,
                         username=self.config.username, public_ip=public_ip)
 
             print(f"Your IPv4 in current wifi is {public_ip}. Share it with others")
@@ -162,4 +171,8 @@ class Chat:
 
 if __name__ == "__main__":
     chat = Chat()
-    chat.run()
+    if not args.console:
+        ui = ChatUI(chat.node)
+        ui.run()
+    else:
+        chat.run()
