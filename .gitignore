@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Chat app files
-known_peers.json
+contacts.json
 config.json
 chat_downloads/
 

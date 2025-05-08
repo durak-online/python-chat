@@ -5,6 +5,7 @@ from tkinter import Tk, Listbox, Text, Toplevel, messagebox, ttk
 from tkinter.constants import BOTH, LEFT, RIGHT, WORD, TOP, X, Y, END
 
 from chat_classes import Message
+from contacts import Contact
 from node import Node
 
 
@@ -26,7 +27,7 @@ class ChatUI:
         self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=BOTH, expand=True)
 
-        self.sidebar = ttk.Frame(self.main_frame, width=200)
+        self.sidebar = ttk.Frame(self.main_frame, width=250)
         self.sidebar.pack(side=LEFT, fill=Y)
 
         self.chat_list = Listbox(self.sidebar)
@@ -134,21 +135,21 @@ class ChatUI:
             self.history.insert(
                 END,
                 f"[{msg.sent_time.strftime("%H:%M:%S")}] "
-                f"{msg.sender_username}: {msg.message}\n"
+                f"{msg.sender.username}: {msg.message}\n"
             )
         self.history.configure(state="disabled")
 
     def add_message(self, msg: Message):
-        if msg.sender not in self.chats.keys() and msg.sender_username != "You":
-            self.add_new_chat(msg.sender_username, msg.sender)
-        self.chats[msg.sender].append(msg)
+        if msg.sender not in self.chats.keys() and msg.sender.username != "You":
+            self.add_new_chat(msg.sender.username, msg.sender.self)
+        self.chats[msg.sender.self].append(msg)
 
         if self.active_chat == msg.sender:
             self.history.configure(state="normal")
             self.history.insert(
                 END,
                 f"[{msg.sent_time.strftime("%H:%M:%S")}] "
-                f"{msg.sender_username}: {msg.message}\n"
+                f"{msg.sender.username}: {msg.message}\n"
             )
             self.history.configure(state="disabled")
             self.history.see(END)
@@ -160,8 +161,11 @@ class ChatUI:
             self.node.send_message(host, port, message)
             self.add_message(
                 Message(
-                    self.active_chat,
-                    "You",
+                    Contact(
+                        self.active_chat[0],
+                        self.active_chat[1],
+                        "You"
+                    ),
                     datetime.now(),
                     message
                 ))
@@ -181,7 +185,7 @@ class ChatUI:
 
     def on_close(self):
         self.root.destroy()
-        self.node.peer_base.save_peers()
+        self.node.peer_base.save_contacts()
         self.node.close()
         self.update_thread.join(timeout=2)
         sys.exit(0)

@@ -5,7 +5,7 @@ from collections import deque
 from datetime import datetime
 
 from chat_classes import Message
-from peer_base import PeerBase
+from contacts import Contacts, Contact
 
 MESSAGE_REGEX = re.compile(
     r"SENDER:(?P<username>[^ ]+?) "
@@ -47,7 +47,7 @@ class Node:
         self.port = port
         self.username = username
         self.public_ip = public_ip
-        self.peer_base = PeerBase()
+        self.peer_base = Contacts()
         self.new_messages = deque[Message]()
         self.self = (host, port)
 
@@ -204,8 +204,11 @@ class Node:
         )
         self.new_messages.append(
             Message(
-                (groups["host"], int(groups["port"])),
-                groups["username"],
+                Contact(
+                    groups["host"],
+                    int(groups["port"]),
+                    groups["username"]
+                ),
                 datetime.now(),
                 groups["message"]
             )
