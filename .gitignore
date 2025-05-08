@@ -10,6 +10,7 @@ __pycache__/
 contacts.json
 config.json
 chat_downloads/
+history/
 
 # Distribution / packaging
 .Python

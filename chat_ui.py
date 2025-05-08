@@ -4,8 +4,8 @@ from threading import Thread
 from tkinter import Tk, Listbox, Text, Toplevel, messagebox, ttk
 from tkinter.constants import BOTH, LEFT, RIGHT, WORD, TOP, X, Y, END
 
-from chat_classes import Message
-from contacts import Contact
+from chat_classes import Message, ChatHistory
+from contacts import Contact, DEFAULT_NAME
 from node import Node
 
 
@@ -19,10 +19,6 @@ class ChatUI:
         self.root.geometry("800x600")
         self.root.resizable(True, True)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        # { (friend, you): [messages] }
-        self.chats = dict[tuple[str, int], list[Message]]()
-        self.active_chat: tuple[str, int] | None = None
 
         self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=BOTH, expand=True)
@@ -70,6 +66,11 @@ class ChatUI:
         )
         self.send_btn.pack(side=RIGHT, padx=5)
 
+        # { friend: [messages] }
+        self.chats = dict[Contact, ChatHistory]()
+        self.load_chats()
+        self.active_chat: Contact | None = None
+
         self.update_thread = Thread(target=self.update_messages, daemon=True)
         self.update_thread.start()
 
@@ -104,22 +105,34 @@ class ChatUI:
     def handle_new_chat(self, chat_name: str, ip: str, port: str, dialog: Toplevel):
         try:
             port_int = int(port)
-            self.add_new_chat(chat_name, (ip, port_int), dialog)
+            self.add_new_chat(Contact(ip, port_int), dialog, chat_name=chat_name)
         except ValueError:
             messagebox.showerror("Error", "Invalid port number")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    def add_new_chat(self, chat_name: str, sender: tuple[str, int], dialog: Toplevel = None):
+    def add_new_chat(
+            self,
+            sender: Contact,
+            dialog: Toplevel = None,
+            chat_name: str = "",
+            need_to_load: bool = False
+    ):
         if sender in self.chats:
             messagebox.showwarning("Warning", "Chat already exists")
             return
 
-        self.chats[sender] = []
-        self.chat_list.insert(END, f"{chat_name} ({sender[0]}:{sender[1]})")
+        self.chats[sender] = ChatHistory(sender, chat_name)
 
+        if need_to_load:
+            self.chats[sender].load_chat()
         if dialog:
             dialog.destroy()
+
+        self.chat_list.insert(
+            END,
+            f"{self.chats[sender].name} ({sender.host}:{sender.port})"
+        )
 
     def select_chat(self, event):
         selection = self.chat_list.curselection()
@@ -131,25 +144,30 @@ class ChatUI:
     def update_chat_history(self):
         self.history.configure(state="normal")
         self.history.delete(1.0, END)
-        for msg in self.chats.get(self.active_chat, []):
+        for msg in self.chats[self.active_chat].messages:
             self.history.insert(
                 END,
                 f"[{msg.sent_time.strftime("%H:%M:%S")}] "
-                f"{msg.sender.username}: {msg.message}\n"
+                f"{msg.sender.username}: {msg.content}\n"
             )
         self.history.configure(state="disabled")
 
     def add_message(self, msg: Message):
         if msg.sender not in self.chats.keys() and msg.sender.username != "You":
-            self.add_new_chat(msg.sender.username, msg.sender.self)
-        self.chats[msg.sender.self].append(msg)
+            self.add_new_chat(msg.sender.self, chat_name=msg.sender.username)
+
+        if (msg.sender in self.chats.keys() and
+                self.chats[msg.sender].contact.username == DEFAULT_NAME):
+            self.chats[msg.sender].contact.username = msg.sender.username
+
+        self.chats[msg.sender].add_message(msg)
 
         if self.active_chat == msg.sender:
             self.history.configure(state="normal")
             self.history.insert(
                 END,
                 f"[{msg.sent_time.strftime("%H:%M:%S")}] "
-                f"{msg.sender.username}: {msg.message}\n"
+                f"{msg.sender.username}: {msg.content}\n"
             )
             self.history.configure(state="disabled")
             self.history.see(END)
@@ -157,13 +175,13 @@ class ChatUI:
     def send_message(self):
         message = self.entry.get()
         if message and self.active_chat:
-            host, port = self.active_chat
+            host, port = self.active_chat.self
             self.node.send_message(host, port, message)
             self.add_message(
                 Message(
                     Contact(
-                        self.active_chat[0],
-                        self.active_chat[1],
+                        self.active_chat.host,
+                        self.active_chat.port,
                         "You"
                     ),
                     datetime.now(),
@@ -177,15 +195,18 @@ class ChatUI:
                 msg = self.node.get_message()
                 self.root.after(0, self.add_message, msg)
 
-    def update_chat_list(self):
-        pass
+    def load_chats(self):
+        for contact in self.node.contacts.contacts:
+            self.add_new_chat(contact, need_to_load=True)
 
     def run(self):
         self.root.mainloop()
 
     def on_close(self):
         self.root.destroy()
-        self.node.peer_base.save_contacts()
+        self.node.contacts.save_contacts()
+        for chat in self.chats.values():
+            chat.save_chat()
         self.node.close()
         self.update_thread.join(timeout=2)
         sys.exit(0)

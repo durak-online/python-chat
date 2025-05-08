@@ -90,7 +90,7 @@ class NodeTests(unittest.TestCase):
             "SENDER:user 127.0.0.1:8001 | MESSAGE:Hello"
         ).encode("utf-8")
 
-        with patch.object(self.node.peer_base, "update_peer") as mock_update:
+        with patch.object(self.node.contacts, "update_peer") as mock_update:
             self.node.handle_message(test_data)
 
             mock_update.assert_called_with("127.0.0.1", 8001, "user")

@@ -47,7 +47,7 @@ class Node:
         self.port = port
         self.username = username
         self.public_ip = public_ip
-        self.peer_base = Contacts()
+        self.contacts = Contacts()
         self.new_messages = deque[Message]()
         self.self = (host, port)
 
@@ -197,7 +197,7 @@ class Node:
                   f"{groups["message"]}\n>> ",
                   end="", flush=True)
 
-        self.peer_base.update_peer(
+        self.contacts.update_peer(
             groups["host"],
             int(groups["port"]),
             groups["username"]

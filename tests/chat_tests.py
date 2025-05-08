@@ -32,7 +32,7 @@ class ChatTests(unittest.TestCase):
 
     def test_add_contact_valid(self):
         self.chat.add_contact("/add friend 127.0.0.1 8001")
-        self.chat.node.peer_base.add_peer.assert_called_with(
+        self.chat.node.contacts.add_peer.assert_called_with(
             Contact("127.0.0.1", 8001, "friend")
         )
 
@@ -43,22 +43,22 @@ class ChatTests(unittest.TestCase):
 
     def test_send_message_valid(self):
         mock_peer = MagicMock()
-        self.chat.node.peer_base.get_contact_by_username.return_value = mock_peer
+        self.chat.node.contacts.get_contact_by_username.return_value = mock_peer
         self.chat.send_message("/send friend Hello!")
         self.chat.node.send_message.assert_called_with(
             mock_peer.host, mock_peer.port, "Hello!"
         )
 
     def test_send_message_invalid(self):
-        self.chat.node.peer_base.get_contact_by_username.return_value = None
-        self.chat.node.peer_base.get_contact_by_host.return_value = None
+        self.chat.node.contacts.get_contact_by_username.return_value = None
+        self.chat.node.contacts.get_contact_by_host.return_value = None
         with patch("builtins.print") as mock_print:
             self.chat.send_message("/send user1 Hello")
             mock_print.assert_called_with("There's no such user in your contacts")
 
     def test_send_file_valid(self):
         mock_peer = MagicMock()
-        self.chat.node.peer_base.get_contact_by_username.return_value = mock_peer
+        self.chat.node.contacts.get_contact_by_username.return_value = mock_peer
         self.chat.send_file("/sendfile friend test.txt")
         self.chat.node.send_file.assert_called_with(
             mock_peer.host, mock_peer.port, "test.txt"

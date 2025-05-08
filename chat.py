@@ -45,7 +45,7 @@ class Chat:
         except Exception as e:
             print(e)
         finally:
-            self.node.peer_base.save_contacts()
+            self.node.contacts.save_contacts()
             self.node.close()
             self.receive_thread.join(timeout=2)
             sys.exit(0)
@@ -66,9 +66,9 @@ class Chat:
             elif command.startswith("/chport"):
                 self.change_port(command)
             elif command.startswith("/list"):
-                self.node.peer_base.print_peers()
+                self.node.contacts.print_contacts()
             elif command.startswith("/clear"):
-                self.node.peer_base.clear()
+                self.node.contacts.clear()
                 print("Erased all contacts")
             elif command.startswith("/help"):
                 self.print_help()
@@ -85,7 +85,7 @@ class Chat:
 
         _, port = parts
         self.config.save_config(self.config.username, int(port))
-        self.node.peer_base.save_contacts()
+        self.node.contacts.save_contacts()
         self.node.close()
         self.receive_thread.join()
         print("Closed old server")
@@ -112,10 +112,10 @@ class Chat:
             return
 
         _, username, message = parts
-        peer = self.node.peer_base.get_contact_by_username(username)
+        peer = self.node.contacts.get_contact_by_username(username)
         # if user typed IP instead username
         if not peer:
-            peer = self.node.peer_base.get_contact_by_host(username)
+            peer = self.node.contacts.get_contact_by_host(username)
 
         if peer:
             self.node.send_message(peer.host, peer.port, message)
@@ -129,10 +129,10 @@ class Chat:
             return
 
         _, username, path = parts
-        peer = self.node.peer_base.get_contact_by_username(username)
+        peer = self.node.contacts.get_contact_by_username(username)
         # if user typed IP instead username
         if not peer:
-            peer = self.node.peer_base.get_contact_by_host(username)
+            peer = self.node.contacts.get_contact_by_host(username)
 
         if peer:
             self.node.send_file(peer.host, peer.port, path)
@@ -146,7 +146,7 @@ class Chat:
             return
 
         _, username, host, port = parts
-        self.node.peer_base.add_peer(Contact(host, int(port), username))
+        self.node.contacts.add_peer(Contact(host, int(port), username))
         print(f"Added {username} to contacts")
 
     def get_node(self) -> Node:

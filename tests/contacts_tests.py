@@ -21,12 +21,12 @@ class FriendBaseTests(unittest.TestCase):
 
     def test_clear(self):
         self.base.clear()
-        self.assertEqual(0, len(self.base._contacts))
+        self.assertEqual(0, len(self.base.contacts))
 
     def test_add_peer(self):
         self.base.clear()
         self.base.add_peer(Contact("localhost", 8000))
-        self.assertEqual(1, len(self.base._contacts))
+        self.assertEqual(1, len(self.base.contacts))
 
     def test_save_load(self):
         self.base.clear()
@@ -35,8 +35,8 @@ class FriendBaseTests(unittest.TestCase):
 
         self.base.add_peer(Contact("localhost", 8001))
         self.base.load_contacts()
-        self.assertEqual(1, len(self.base._contacts))
-        self.assertEqual(Contact("localhost", 8000), self.base._contacts[0])
+        self.assertEqual(1, len(self.base.contacts))
+        self.assertEqual(Contact("localhost", 8000), self.base.contacts[0])
 
     def test_get_peer_by_host(self):
         self.base.clear()
