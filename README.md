@@ -1,23 +1,123 @@
-# python-chat
-This is a chat in Python for university practice.
+# Python P2P Chat Application 🐍💬
+
+A decentralized peer-to-peer chat implementation for educational purposes, supporting both console and GUI interfaces.
+
+## Features ✨
+- **Dual Interface** - Choose between console or graphical UI
+- **File Transfer** - Share files directly through the chat
+- **Dynamic Port Management** - Change ports without restarting
+- **Contact Management** - Save and organize your chat partners
+- **Local Network Support** - Option to run in localhost mode
+
+## Getting Started 🚀
+
+### Prerequisites
+- Python 3.8+
+- Tkinter (usually included with Python)
+
+### Installation
+```bash
+git clone https://github.com/durak-online/python-chat.git
+cd python-chat
+```
+
+## Launch Options 🖥️
+```bash
+# Basic startup
+python chat.py
+
+# Localhost mode
+python chat.py -l
+
+# Console-only mode
+python chat.py -c
+
+# Custom port configuration
+python chat.py -p 9000
+
+# Combined options
+python chat.py -l -p 8000  # Localhost on port 8000
+```
+
+## Console Commands 🔧
+| Command        | Syntax                            | Description                     |
+|----------------|-----------------------------------|---------------------------------|
+| Add Contact    | ```/add <username> <ip> <port>``` | Save new chat partner           |
+| Send Message   | ```/send <username> <message>```  | Direct message to contact       |
+| Send File      | ```/sendfile <username> <path>``` | Transfer files (supports paths) |
+| List Contacts  | ```/list```                       | Show all saved contacts         |                                 |
+| Clear Contacts | ```/clear```                      | Reset contact list              |                                 |
+| Change Name    | ```/chname <newname>```           | Update your display name        |                                 |
+| Change Port    | ```/chport <port>```              | Switch listening port           |
+| Exit           | ```/exit```                       | Quit application                |
+
+## GUI Guide 🖼️
+### Interface Components
+
+1. **Chat List Panel (Left)**
+- Active conversations
+- "New Chat" button
+- Click to switch chats
+
+2. **Message Display (Center)**
+```plaintext
+[14:32:15] Alice: Hello everyone!
+[14:33:23] You: Hi Alice!
+```
+
+3. **Input Area (Bottom)**
+```plaintext
+[Message Input Field]  [Send Button]
+```
+
+    
+
+### Key Features
+
+- **New Chat Setup**
+```plaintext
+1. Click "New Chat"
+2. Fill:
+   - Chat Name: John Doe
+   - IP: 192.168.1.5
+   - Port: 8000
+3. Click "Add"
+```
 
 
-## Main Usage
-### Starting App
-To run chat app you should open scripts folder in terminal and then type ```python3 chat.py``` or ```python chat.py```.
+- **File Transfers**
+```
+# Console
+/sendfile colleague report.pdf
 
-If you want to run app on localhost (I don't know why) type ```python3 chat.py -l```.
+# In the future you will able to send files through GUI
+```
 
-### In-app commands
-Basically, you can type ```/help``` and get all answers to your questions.
+## Technical Specs ⚙️
+### Network Configuration
+```plaintext
+DEFAULT_PORT = 8000
+LOCALHOST_IP = "127.0.0.1"
+```
 
-1. ```/add <username> <peer_host> <peer_port>```. Use it if you know IP address and port and want to add new contact to your contacts. Type any username you want, while adding.
-2. ```/send <username> <message>```. Just sends message to user.
-3. ```/sendfile <username> <path_to_file>```. Sends a file to user. You should write full file path if it is located in another directory,
-or you can write just a name with extension if file is located in current directory. All received files will be saved in ```./chat_downloads``` directory.
-4. ```/list```. Prints all your contacts.
-5. ```/clear```. Erases all your contacts.
-6. ```/chname <username>```. Use it if you want to change your client name to something new. This name will appear to people with whom you haven't a chat yet.
-7. ```/chport <port>```. Use it if you want to change port on which your app runs. **Warning!!!** Server will close all connections and then start to listen on new port. You should tell your interlocutor new port, and he should update it.
-8. ```/exit```. Use it to close app. You can also use ```Ctrl + C```.
-9. ```/help```. Prints all available commands and small description for them.
+### File Structure
+```plaintext
+.
+├── chat_downloads/     # Received files
+├── config.json         # User preferences
+└── known_peers.json    # Contact list
+```
+## Troubleshooting 🛠️
+
+### Common Issues:
+
+1. **Connection Refused**
+```bash
+# Verify ports match
+netstat -ano | findstr :8000  # port on which you run app
+```
+
+2. **Missing Dependencies**
+```bash
+pip install tk
+```
