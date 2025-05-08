@@ -104,8 +104,9 @@ LOCALHOST_IP = "127.0.0.1"
 ```plaintext
 .
 ├── chat_downloads/     # Received files
+├── history/            # Chats history
 ├── config.json         # User preferences
-└── known_peers.json    # Contact list
+└── contacts.json       # Contact list
 ```
 ## Troubleshooting 🛠️
 
