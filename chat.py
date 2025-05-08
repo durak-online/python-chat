@@ -4,8 +4,8 @@ import sys
 from threading import Thread
 
 from chat_ui import ChatUI
-from node import Node
 from contacts import Contact
+from node import Node
 from user_config import UserConfig
 
 parser = argparse.ArgumentParser(description="Distributed Chat Application")
@@ -156,13 +156,21 @@ class Chat:
             port = args.port
 
         if args.local:
-            node = Node(port=port,
-                        username=self.config.username,
-                        public_ip="localhost")
+            node = Node(
+                port=port,
+                username=self.config.username,
+                public_ip="localhost",
+                is_console=args.console
+            )
         else:
             public_ip = socket.gethostbyname(socket.gethostname())
-            node = Node(host="0.0.0.0", port=port,
-                        username=self.config.username, public_ip=public_ip)
+            node = Node(
+                host="0.0.0.0",
+                port=port,
+                username=self.config.username,
+                public_ip=public_ip,
+                is_console=args.console
+            )
 
             print(f"Your IPv4 in current wifi is {public_ip}. Share it with others")
             print(f"Your username is {node.username}")
