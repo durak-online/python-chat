@@ -1,7 +1,8 @@
+import os
 import sys
 from datetime import datetime
 from threading import Thread
-from tkinter import Tk, Listbox, Text, Toplevel, messagebox, ttk
+from tkinter import Tk, Listbox, Text, Toplevel, messagebox, ttk, filedialog
 from tkinter.constants import BOTH, LEFT, RIGHT, WORD, TOP, X, Y, END
 
 from chat_classes import Message, ChatHistory
@@ -59,6 +60,13 @@ class ChatUI:
         self.entry.pack(side=LEFT, fill=X, expand=True, padx=5)
         self.entry.bind("<Return>", lambda e: self.send_message())
 
+        self.send_file_btn = ttk.Button(
+            self.input_frame,
+            text="Send File",
+            command=self.send_file
+        )
+        self.send_file_btn.pack(side=RIGHT, padx=5)
+
         self.send_btn = ttk.Button(
             self.input_frame,
             text="Send",
@@ -71,10 +79,14 @@ class ChatUI:
         self.load_chats()
         self.active_chat: Contact | None = None
 
-        self.update_thread = Thread(target=self.update_messages, daemon=True)
+        self.update_thread = Thread(target=self.receive_messages, daemon=True)
         self.update_thread.start()
 
     def start_new_chat(self):
+        """
+        Creates a pop-up dialogue window
+        in which you type all chat parameters
+        """
         dialog = Toplevel(self.root)
         dialog.title("New Chat")
         dialog.resizable(False, False)
@@ -102,7 +114,14 @@ class ChatUI:
             )
         ).grid(row=3, columnspan=2)
 
-    def handle_new_chat(self, chat_name: str, ip: str, port: str, dialog: Toplevel):
+    def handle_new_chat(
+            self,
+            chat_name: str,
+            ip: str,
+            port: str,
+            dialog: Toplevel
+    ):
+        """Tries to create a new chat with inputted entry"""
         try:
             port_int = int(port)
             self.add_new_chat(Contact(ip, port_int), dialog, chat_name=chat_name)
@@ -118,6 +137,7 @@ class ChatUI:
             chat_name: str = "",
             need_to_load: bool = False
     ):
+        """Adds a new chat to dict and UI chat list"""
         if sender in self.chats:
             messagebox.showwarning("Warning", "Chat already exists")
             return
@@ -135,6 +155,7 @@ class ChatUI:
         )
 
     def select_chat(self, event):
+        """Calls on chat selection"""
         selection = self.chat_list.curselection()
         if selection:
             index = selection[0]
@@ -142,6 +163,7 @@ class ChatUI:
             self.update_chat_history()
 
     def update_chat_history(self):
+        """Updates text window with chat history"""
         self.history.configure(state="normal")
         self.history.delete(1.0, END)
         for msg in self.chats[self.active_chat].messages:
@@ -153,6 +175,7 @@ class ChatUI:
         self.history.configure(state="disabled")
 
     def add_message(self, msg: Message):
+        """Adds new message to chat"""
         if msg.sender not in self.chats.keys() and msg.sender.username != "You":
             self.add_new_chat(msg.sender.self, chat_name=msg.sender.username)
 
@@ -173,6 +196,10 @@ class ChatUI:
             self.history.see(END)
 
     def send_message(self):
+        """
+        Sends message to current selected chat
+        and prints it to text window
+        """
         message = self.entry.get()
         if message and self.active_chat:
             host, port = self.active_chat.self
@@ -189,20 +216,49 @@ class ChatUI:
                 ))
             self.entry.delete(0, END)
 
-    def update_messages(self):
+    def receive_messages(self):
+        """Listens to new received messages"""
         while True:
             if len(self.node.new_messages) > 0:
                 msg = self.node.get_message()
                 self.root.after(0, self.add_message, msg)
 
     def load_chats(self):
+        """Adds all chats from saved contacts"""
         for contact in self.node.contacts.contacts:
             self.add_new_chat(contact, need_to_load=True)
 
+    def send_file(self):
+        """
+        Asks for file path and if it is not empty
+        sends file to current selected chat
+        """
+        path = filedialog.askopenfilename()
+        if path != "":
+            self.node.send_file(
+                self.active_chat.host,
+                self.active_chat.port,
+                path
+            )
+
+            filename = os.path.basename(path)
+            self.add_message(Message(
+                Contact(
+                    self.active_chat.host,
+                    self.active_chat.port,
+                    "You"
+                ),
+                datetime.now(),
+                filename,
+                "file"
+            ))
+
     def run(self):
+        """Runs chat"""
         self.root.mainloop()
 
     def on_close(self):
+        """Calls on app close"""
         self.root.destroy()
         self.node.contacts.save_contacts()
         for chat in self.chats.values():

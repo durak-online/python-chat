@@ -161,7 +161,10 @@ class Node:
         return buffer
 
     def handle_file_meta(self, data: bytes, downloads_path: str):
-        """Creates new file using received meta info"""
+        """
+        Creates new file using received meta info
+        and adds a new message to queue
+        """
         meta = data.decode("utf-8")
         match = HEADER_REGEX.match(meta)
         if match:
@@ -175,6 +178,17 @@ class Node:
                 "handle": open(os.path.join(downloads_path, groups["filename"]), "wb")
             }
 
+            self.new_messages.append(Message(
+                Contact(
+                    groups["host"],
+                    int(groups["port"]),
+                    groups["username"]
+                ),
+                datetime.now(),
+                groups["filename"],
+                "file"
+            ))
+
     def finalize_file(self):
         """Closes file"""
         if self._current_file:
@@ -187,7 +201,10 @@ class Node:
             raise ValueError("Received end of file marker, but no file was saving")
 
     def handle_message(self, data_bytes: bytes):
-        """Prints received message"""
+        """
+        Adds new text message to queue
+        and prints it if console mode is on
+        """
         data = data_bytes.decode("utf-8")
         groups = MESSAGE_REGEX.match(data).groupdict()
 
@@ -202,19 +219,19 @@ class Node:
             int(groups["port"]),
             groups["username"]
         )
-        self.new_messages.append(
-            Message(
-                Contact(
-                    groups["host"],
-                    int(groups["port"]),
-                    groups["username"]
-                ),
-                datetime.now(),
-                groups["message"]
-            )
-        )
+        self.new_messages.append(Message(
+            Contact(
+                groups["host"],
+                int(groups["port"]),
+                groups["username"]
+            ),
+            datetime.now(),
+            groups["message"],
+            "text"
+        ))
 
     def get_message(self) -> Message:
+        """Returns the first received message from queue"""
         return self.new_messages.popleft()
 
     def close(self):
