@@ -1,11 +1,44 @@
-import unittest
 import os
+import unittest
 
 import contacts
-from contacts import Contact, Contacts
+from contacts import Contact, Contacts, DEFAULT_NAME
 
 
-class FriendBaseTests(unittest.TestCase):
+class ContactTests(unittest.TestCase):
+    def test_init(self):
+        contact = Contact("192.168.0.0", 8000)
+        self.assertIsNotNone(contact)
+        self.assertEqual("192.168.0.0", contact.host)
+        self.assertEqual(8000, contact.port)
+        self.assertEqual(DEFAULT_NAME, contact.username)
+
+    def test_to_dict(self):
+        contact = Contact("192.168.0.0", 8000)
+        contact_dict = contact.to_dict()
+        self.assertDictEqual(
+            {
+                "host": "192.168.0.0",
+                "port": 8000,
+                "username": DEFAULT_NAME
+            },
+            contact_dict
+        )
+
+    def test_from_dict(self):
+        contact_dict = {
+            "host": "192.168.0.0",
+            "port": 8000,
+            "username": DEFAULT_NAME
+        }
+        contact = Contact.from_dict(contact_dict)
+        self.assertIsNotNone(contact)
+        self.assertEqual("192.168.0.0", contact.host)
+        self.assertEqual(8000, contact.port)
+        self.assertEqual(DEFAULT_NAME, contact.username)
+
+
+class ContactsTests(unittest.TestCase):
     def __init__(self, method_name="run_tests"):
         super().__init__(method_name)
         self.base = Contacts()
@@ -51,6 +84,15 @@ class FriendBaseTests(unittest.TestCase):
         self.base.add_peer(Contact("localhost", 8001, "User2"))
         self.assertEqual(Contact("192.168.0.0", 8000, "User1"),
                          self.base.get_contact_by_username("User1"))
+
+    def test_update_peer(self):
+        self.base.clear()
+        self.base.add_peer(Contact("192.168.0.0", 8000))
+        self.base.update_peer("192.168.10.20", 8000, "User1")
+        contact = self.base.get_contact_by_username("User1")
+        self.assertIsNotNone(contact)
+        self.assertEqual("192.168.10.20", contact.host)
+        self.assertEqual(8000, contact.port)
 
 
 if __name__ == "__main__":

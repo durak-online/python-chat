@@ -1,6 +1,7 @@
+import os
 import unittest
 from unittest.mock import patch, Mock
-import os
+
 from node import Node, MESSAGE_REGEX, HEADER_REGEX, \
     MSG_TYPE_TEXT, MSG_TYPE_FILE_META, MSG_TYPE_FILE_DATA, MSG_TYPE_FILE_END
 
@@ -140,6 +141,21 @@ class NodeTests(unittest.TestCase):
             self.node.finalize_file()
 
         os.remove(test_file)
+
+    def test_new_message_in_queue(self):
+        message = f"SENDER:user 127.0.0.1:8001 | MESSAGE:test message"
+        message_bytes = message.encode("utf-8")
+        data = bytes([MSG_TYPE_TEXT]) \
+               + len(message_bytes).to_bytes(4, "big") \
+               + message_bytes
+
+        self.node.process_buffer(data, "")
+
+        result_message = self.node.get_message()
+        self.assertEqual("user", result_message.sender.username)
+        self.assertEqual(("127.0.0.1", 8001), result_message.sender.self)
+        self.assertEqual("test message", result_message.content)
+        self.assertEqual("text", result_message.message_type)
 
 
 if __name__ == "__main__":

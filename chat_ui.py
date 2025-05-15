@@ -263,6 +263,7 @@ class ChatUI:
             ))
 
     def change_username(self):
+        """Creates new dialogue window to change username"""
         dialog = Toplevel(self.root)
         dialog.title("New Username")
         dialog.resizable(False, False)
@@ -281,6 +282,7 @@ class ChatUI:
         ).grid(row=3, columnspan=2)
 
     def handle_username(self, username: str, dialog: Toplevel):
+        """Handles new username and saves it if it is correct"""
         username = username.strip()
         if " " in username:
             messagebox.showwarning("Warning", "You should input username without spaces")
