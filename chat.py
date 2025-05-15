@@ -180,7 +180,7 @@ class Chat:
 if __name__ == "__main__":
     chat = Chat()
     if not args.console:
-        ui = ChatUI(chat.node)
+        ui = ChatUI(chat.node, chat.config)
         ui.run()
     else:
         chat.run()

@@ -8,18 +8,29 @@ from tkinter.constants import BOTH, LEFT, RIGHT, WORD, TOP, X, Y, END
 from chat_classes import Message, ChatHistory
 from contacts import Contact, DEFAULT_NAME
 from node import Node
+from user_config import UserConfig
 
 
 class ChatUI:
     """A class for chat UI with sidebar"""
 
-    def __init__(self, node: Node):
+    def __init__(self, node: Node, config: UserConfig):
         self.node = node
+        self.config = config
         self.root = Tk()
         self.root.title(f"P2P Chat - {node.username} ({node.public_ip}:{node.port})")
         self.root.geometry("800x600")
         self.root.resizable(True, True)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        self.top_frame = ttk.Frame(self.root, height=20)
+        self.top_frame.pack(side=TOP, fill=X, pady=5)
+
+        ttk.Button(
+            self.top_frame,
+            text="Change Username",
+            command=self.change_username
+        ).pack(side=LEFT, padx=5)
 
         self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=BOTH, expand=True)
@@ -28,7 +39,7 @@ class ChatUI:
         self.sidebar.pack(side=LEFT, fill=Y)
 
         self.chat_list = Listbox(self.sidebar)
-        self.chat_list.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        self.chat_list.pack(fill=BOTH, expand=True, padx=5)
         self.chat_list.bind("<<ListboxSelect>>", self.select_chat)
 
         ttk.Button(
@@ -60,19 +71,17 @@ class ChatUI:
         self.entry.pack(side=LEFT, fill=X, expand=True, padx=5)
         self.entry.bind("<Return>", lambda e: self.send_message())
 
-        self.send_file_btn = ttk.Button(
+        ttk.Button(
             self.input_frame,
             text="Send File",
             command=self.send_file
-        )
-        self.send_file_btn.pack(side=RIGHT, padx=5)
+        ).pack(side=RIGHT, padx=5)
 
-        self.send_btn = ttk.Button(
+        ttk.Button(
             self.input_frame,
             text="Send",
             command=self.send_message
-        )
-        self.send_btn.pack(side=RIGHT, padx=5)
+        ).pack(side=RIGHT, padx=5)
 
         # { friend: [messages] }
         self.chats = dict[Contact, ChatHistory]()
@@ -252,6 +261,37 @@ class ChatUI:
                 filename,
                 "file"
             ))
+
+    def change_username(self):
+        dialog = Toplevel(self.root)
+        dialog.title("New Username")
+        dialog.resizable(False, False)
+
+        ttk.Label(dialog, text="New username:").grid(row=0, column=0)
+        username_entry = ttk.Entry(dialog)
+        username_entry.grid(row=0, column=1)
+
+        ttk.Button(
+            dialog,
+            text="Save",
+            command=lambda: self.handle_username(
+                username_entry.get(),
+                dialog
+            )
+        ).grid(row=3, columnspan=2)
+
+    def handle_username(self, username: str, dialog: Toplevel):
+        username = username.strip()
+        if " " in username:
+            messagebox.showwarning("Warning", "You should input username without spaces")
+            return
+
+        self.node.username = username
+        self.config.save_config(username, self.node.port)
+        dialog.destroy()
+        self.root.title(
+            f"P2P Chat - {self.node.username} ({self.node.public_ip}:{self.node.port})"
+        )
 
     def run(self):
         """Runs chat"""
