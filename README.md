@@ -2,17 +2,20 @@
 
 A decentralized peer-to-peer chat implementation for educational purposes, supporting both console and GUI interfaces.
 
+By Dedkov Ivan
+
+
 ## Features ✨
 - **Dual Interface** - Choose between console or graphical UI
 - **File Transfer** - Share files directly through the chat
-- **Dynamic Port Management** - Change ports without restarting
+- **Dynamic Port Management** - Change ports without restarting (only in console mode)
 - **Contact Management** - Save and organize your chat partners
 - **Local Network Support** - Option to run in localhost mode
 
 ## Getting Started 🚀
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.10+
 - Tkinter (usually included with Python)
 
 ### Installation
@@ -55,20 +58,18 @@ python chat.py -l -p 8000  # Localhost on port 8000
 ### Interface Components
 
 1. **Chat List Panel (Left)**
-- Active conversations
-- "New Chat" button
-- Click to switch chats
-
+   - Active conversations
+   - "New Chat" button
+   - Click to switch chats
 2. **Message Display (Center)**
-```plaintext
-[14:32:15] Alice: Hello everyone!
-[14:33:23] You: Hi Alice!
-```
-
+    ```plaintext
+    [14:32:15] Alice: Hello everyone!
+    [14:33:23] You: Hi Alice!
+    ```
 3. **Input Area (Bottom)**
-```plaintext
-[Message Input Field]  [Send Button]
-```
+    ```plaintext
+    [Message Input Field]  [Send Button]
+    ```
 
     
 
@@ -90,7 +91,10 @@ python chat.py -l -p 8000  # Localhost on port 8000
 # Console
 /sendfile colleague report.pdf
 
-# In the future you will able to send files through GUI
+# GUI
+1. Click "Send File"
+2. Choose file you want to share
+3. Click "Open"
 ```
 
 ## Technical Specs ⚙️
@@ -113,12 +117,11 @@ LOCALHOST_IP = "127.0.0.1"
 ### Common Issues:
 
 1. **Connection Refused**
-```bash
-# Verify ports match
-netstat -ano | findstr :8000  # port on which you run app
-```
-
+    ```bash
+    # Verify ports match
+    netstat -ano | findstr :8000  # port on which you run app
+    ```
 2. **Missing Dependencies**
-```bash
-pip install tk
-```
+    ```bash
+    pip install tk
+    ```
