@@ -12,7 +12,7 @@ class UserConfigTests(unittest.TestCase):
 
     def setUp(self):
         self.initial_name = user_config.CONFIG_FILE
-        user_config.PEERS_FILE = "config_test.json"
+        user_config.CONFIG_FILE = "config_test.json"
 
     def tearDown(self):
         os.remove(user_config.CONFIG_FILE)

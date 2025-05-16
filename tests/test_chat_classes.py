@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from chat_classes import Message, ChatInfo, ChatHistory  # Замените 'chat_classes' на имя вашего модуля
+from chat_classes import Message, ChatInfo, ChatHistory
 from contacts import Contact
 
 

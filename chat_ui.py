@@ -163,6 +163,8 @@ class ChatUI:
             f"{self.chats[sender].name} ({sender.host}:{sender.port})"
         )
 
+        self.node.contacts.update_peer(sender.host, sender.port, sender.username)
+
     def select_chat(self, event):
         """Calls on chat selection"""
         selection = self.chat_list.curselection()
