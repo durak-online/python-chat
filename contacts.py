@@ -61,7 +61,9 @@ class Contacts:
                 content = f.read()
                 if content.strip():
                     loaded_data = json.loads(content)
-                    self.contacts = [Contact.from_dict(item) for item in loaded_data]
+                    self.contacts = [
+                        Contact.from_dict(item) for item in loaded_data
+                    ]
                 else:
                     self.contacts = []
         except json.JSONDecodeError:
@@ -85,7 +87,8 @@ class Contacts:
             return
 
         for i, contact in enumerate(self.contacts):
-            print(f"{i + 1}. {contact.username} ({contact.host}:{contact.port})")
+            print(f"{i + 1}. {contact.username} "
+                  f"({contact.host}:{contact.port})")
 
     def get_contact_by_host(self, host: str) -> Contact | None:
         """Returns contact by host"""

@@ -1,4 +1,3 @@
-import argparse
 import unittest
 from argparse import Namespace
 from unittest.mock import patch, MagicMock
@@ -41,11 +40,15 @@ class ChatTests(unittest.TestCase):
     def test_add_contact_invalid(self):
         with patch("builtins.print") as mock_print:
             self.chat.add_contact("/add user")
-            mock_print.assert_called_with("Usage: /add <username> <peer_host> <peer_port>")
+            mock_print.assert_called_with(
+                "Usage: /add <username> <peer_host> <peer_port>"
+            )
 
     def test_send_message_valid(self):
         mock_peer = MagicMock()
-        self.chat.node.contacts.get_contact_by_username.return_value = mock_peer
+        self.chat.node.contacts.get_contact_by_username.return_value = (
+            mock_peer
+        )
         self.chat.send_message("/send friend Hello!")
         self.chat.node.send_message.assert_called_with(
             mock_peer.host, mock_peer.port, "Hello!"
@@ -56,11 +59,15 @@ class ChatTests(unittest.TestCase):
         self.chat.node.contacts.get_contact_by_host.return_value = None
         with patch("builtins.print") as mock_print:
             self.chat.send_message("/send user1 Hello")
-            mock_print.assert_called_with("There's no such user in your contacts")
+            mock_print.assert_called_with(
+                "There's no such user in your contacts"
+            )
 
     def test_send_file_valid(self):
         mock_peer = MagicMock()
-        self.chat.node.contacts.get_contact_by_username.return_value = mock_peer
+        self.chat.node.contacts.get_contact_by_username.return_value = (
+            mock_peer
+        )
         self.chat.send_file("/sendfile friend test.txt")
         self.chat.node.send_file.assert_called_with(
             mock_peer.host, mock_peer.port, "test.txt"
@@ -75,7 +82,9 @@ class ChatTests(unittest.TestCase):
     def test_change_name_invalid(self):
         with patch("builtins.print") as mock_print:
             self.chat.change_name("/chname")
-            mock_print.assert_called_with("Usage: /chname <username_without_spaces>")
+            mock_print.assert_called_with(
+                "Usage: /chname <username_without_spaces>"
+            )
 
     def test_change_port_valid(self):
         with patch("threading.Thread.join"):
@@ -97,12 +106,15 @@ class ChatTests(unittest.TestCase):
         mock_gethost.return_value = "192.168.1.100"
         with patch("builtins.print") as mock_print:
             test_args = Namespace(
-            local=False,
-            console=True,
-            port=8000
-        )
+                local=False,
+                console=True,
+                port=8000
+            )
             chat = Chat(test_args)
-            mock_print.assert_any_call(f"Your IPv4 in current wifi is 192.168.1.100. Share it with others")
+            mock_print.assert_any_call(
+                f"Your IPv4 in current wifi is 192.168.1.100. "
+                f"Share it with others"
+            )
 
 
 if __name__ == "__main__":

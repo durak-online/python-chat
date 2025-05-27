@@ -54,7 +54,9 @@ class NodeTests(unittest.TestCase):
         expected_message = (
             "SENDER:test_user 127.0.0.1:8000 | MESSAGE:Test message"
         ).encode("utf-8")
-        expected_data = bytes([MSG_TYPE_TEXT]) + len(expected_message).to_bytes(4, "big") + expected_message
+        expected_data = (bytes([MSG_TYPE_TEXT])
+                         + len(expected_message).to_bytes(4, "big")
+                         + expected_message)
 
         mock_socket.return_value.__enter__.return_value.connect.assert_called_with(("127.0.0.1", 8001))
         mock_conn.sendall.assert_called_once_with(expected_data)
@@ -69,14 +71,14 @@ class NodeTests(unittest.TestCase):
         expected_meta = (
             "SENDER:test_user 127.0.0.1:8000 | FILENAME:test_file.txt"
         ).encode("utf-8")
-        expected_meta_header = bytes([MSG_TYPE_FILE_META]) \
-                               + len(expected_meta).to_bytes(4, "big") \
-                               + expected_meta
+        expected_meta_header = (bytes([MSG_TYPE_FILE_META])
+                                + len(expected_meta).to_bytes(4, "big")
+                                + expected_meta)
 
         expected_data = b"test content"
-        expected_data_header = bytes([MSG_TYPE_FILE_DATA]) \
-                               + len(expected_data).to_bytes(4, "big") \
-                               + expected_data
+        expected_data_header = (bytes([MSG_TYPE_FILE_DATA])
+                                + len(expected_data).to_bytes(4, "big")
+                                + expected_data)
 
         expected_end_marker = bytes([MSG_TYPE_FILE_END])
 
@@ -145,9 +147,9 @@ class NodeTests(unittest.TestCase):
     def test_new_message_in_queue(self):
         message = f"SENDER:user 127.0.0.1:8001 | MESSAGE:test message"
         message_bytes = message.encode("utf-8")
-        data = bytes([MSG_TYPE_TEXT]) \
-               + len(message_bytes).to_bytes(4, "big") \
-               + message_bytes
+        data = (bytes([MSG_TYPE_TEXT])
+                + len(message_bytes).to_bytes(4, "big")
+                + message_bytes)
 
         self.node.process_buffer(data, "")
 

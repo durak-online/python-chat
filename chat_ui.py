@@ -18,7 +18,8 @@ class ChatUI:
         self.node = node
         self.config = config
         self.root = Tk()
-        self.root.title(f"P2P Chat - {node.username} ({node.public_ip}:{node.port})")
+        self.root.title(f"P2P Chat - {node.username} "
+                        f"({node.public_ip}:{node.port})")
         self.root.geometry("800x600")
         self.root.resizable(True, True)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -88,7 +89,10 @@ class ChatUI:
         self.load_chats()
         self.active_chat: Contact | None = None
 
-        self.update_thread = Thread(target=self.receive_messages, daemon=True)
+        self.update_thread = Thread(
+            target=self.receive_messages,
+            daemon=True
+        )
         self.update_thread.start()
 
     def start_new_chat(self):
@@ -133,7 +137,11 @@ class ChatUI:
         """Tries to create a new chat with inputted entry"""
         try:
             port_int = int(port)
-            self.add_new_chat(Contact(ip, port_int), dialog, chat_name=chat_name)
+            self.add_new_chat(
+                Contact(ip, port_int),
+                dialog,
+                chat_name=chat_name
+            )
         except ValueError:
             messagebox.showerror("Error", "Invalid port number")
         except Exception as e:
@@ -163,7 +171,11 @@ class ChatUI:
             f"{self.chats[sender].name} ({sender.host}:{sender.port})"
         )
 
-        self.node.contacts.update_peer(sender.host, sender.port, sender.username)
+        self.node.contacts.update_peer(
+            sender.host,
+            sender.port,
+            sender.username
+        )
 
     def select_chat(self, event):
         """Calls on chat selection"""
@@ -187,7 +199,8 @@ class ChatUI:
 
     def add_message(self, msg: Message):
         """Adds new message to chat"""
-        if msg.sender not in self.chats.keys() and msg.sender.username != "You":
+        if (msg.sender not in self.chats.keys()
+                and msg.sender.username != "You"):
             self.add_new_chat(msg.sender.self, chat_name=msg.sender.username)
 
         if (msg.sender in self.chats.keys() and
@@ -287,14 +300,18 @@ class ChatUI:
         """Handles new username and saves it if it is correct"""
         username = username.strip()
         if " " in username:
-            messagebox.showwarning("Warning", "You should input username without spaces")
+            messagebox.showwarning(
+                "Warning",
+                "You should input username without spaces"
+            )
             return
 
         self.node.username = username
         self.config.save_config(username, self.node.port)
         dialog.destroy()
         self.root.title(
-            f"P2P Chat - {self.node.username} ({self.node.public_ip}:{self.node.port})"
+            f"P2P Chat - {self.node.username} "
+            f"({self.node.public_ip}:{self.node.port})"
         )
 
     def run(self):

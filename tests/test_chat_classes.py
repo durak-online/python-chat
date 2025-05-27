@@ -11,7 +11,11 @@ from contacts import Contact
 
 class MessageTests(unittest.TestCase):
     def setUp(self):
-        self.contact = Contact(host="127.0.0.1", port=1234, username="test_user")
+        self.contact = Contact(
+            host="127.0.0.1",
+            port=1234,
+            username="test_user"
+        )
         self.sent_time = datetime(2023, 1, 1, 12, 34, 56)
         self.message = Message(
             sender=self.contact,
@@ -78,7 +82,11 @@ class ChatHistoryTest(unittest.TestCase):
         self.patcher = patch('chat_classes.HISTORY_DIR', self.temp_dir)
         self.patcher.start()
 
-        self.contact = Contact(host="127.0.0.1", port=1234, username="test_user")
+        self.contact = Contact(
+            host="127.0.0.1",
+            port=1234,
+            username="test_user"
+        )
         self.sent_time = datetime(2023, 1, 1, 12, 34, 56)
         self.message = Message(
             sender=self.contact,

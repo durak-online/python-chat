@@ -13,20 +13,24 @@ class Chat:
         self.args = args
         self.config = UserConfig()
         self.node = self.get_node()
-        self.receive_thread = Thread(target=self.node.receive_messages,
-                                     daemon=True, args=(self.config.downloads_dir,))
+        self.receive_thread = Thread(
+            target=self.node.receive_messages,
+            daemon=True, args=(self.config.downloads_dir,)
+        )
 
     @staticmethod
     def print_help():
         """Prints help message"""
         print("This is a chat. There are available commands:")
-        print("  /add <username> <peer_host> <peer_port>   Adds new peer to known")
+        print("  /add <username> <peer_host> <peer_port>   "
+              "Adds new peer to known")
         print("  /send <username> <message>   Sends a message to peer")
         print("  /sendfile <username> <path_to_file>   Sends a file to peer")
         print("  /list   Prints list of known peers")
         print("  /clear   Clear all known peers")
         print("  /chname <username>   Edits current username")
-        print("  /chport <port>   Edits current port. This will restart server")
+        print("  /chport <port>   Edits current port. "
+              "This will restart server")
         print("  /exit   Closes this application")
 
     def run(self):
@@ -84,8 +88,10 @@ class Chat:
         self.receive_thread.join()
         print("Closed old server")
         self.node = self.get_node()
-        self.receive_thread = Thread(target=self.node.receive_messages,
-                                     daemon=True, args=(self.config.downloads_dir,))
+        self.receive_thread = Thread(
+            target=self.node.receive_messages,
+            daemon=True, args=(self.config.downloads_dir,)
+        )
         self.receive_thread.start()
         print(f"Started new server on {self.node.host}:{self.node.port}")
 
@@ -166,6 +172,7 @@ class Chat:
                 is_console=self.args.console
             )
 
-            print(f"Your IPv4 in current wifi is {public_ip}. Share it with others")
+            print(f"Your IPv4 in current wifi is {public_ip}. "
+                  f"Share it with others")
             print(f"Your username is {node.username}")
         return node

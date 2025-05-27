@@ -1,5 +1,6 @@
-import unittest
 import os
+import unittest
+
 import user_config
 from user_config import UserConfig
 

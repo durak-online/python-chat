@@ -35,13 +35,17 @@ class Node:
             is_console: bool = False
     ):
         if not isinstance(host, str):
-            raise ValueError(f"Host must be string, but was:{host} {type(host)}")
+            raise ValueError(f"Host must be string, but was:{host} "
+                             f"{type(host)}")
         if not isinstance(port, int):
-            raise ValueError(f"Port must be integer, but was:{port} {type(port)}")
+            raise ValueError(f"Port must be integer, but was:{port} "
+                             f"{type(port)}")
         if not isinstance(username, str):
-            raise ValueError(f"Username must be string, but was:{username} {type(username)}")
+            raise ValueError(f"Username must be string, but was:{username} "
+                             f"{type(username)}")
         if not isinstance(public_ip, str):
-            raise ValueError(f"Public IP must be string, but was:{public_ip} {type(public_ip)}")
+            raise ValueError(f"Public IP must be string, but was:{public_ip} "
+                             f"{type(public_ip)}")
 
         self.host = host
         self.port = port
@@ -53,7 +57,10 @@ class Node:
 
         self._is_running = True
         self._is_console = is_console
-        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._server_socket = socket.socket(
+            socket.AF_INET,
+            socket.SOCK_STREAM
+        )
         self._current_file: dict | None = None
 
     def send_message(self, peer_host: str, peer_port: int, message: str):
@@ -61,7 +68,9 @@ class Node:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.connect((peer_host, peer_port))
-                message = f"SENDER:{self.username} {self.public_ip}:{self.port} | MESSAGE:{message}"
+                message = (f"SENDER:{self.username} "
+                           f"{self.public_ip}:{self.port} | "
+                           f"MESSAGE:{message}")
                 message_bytes = message.encode("utf-8")
                 data = bytes([MSG_TYPE_TEXT]) \
                        + len(message_bytes).to_bytes(4, "big") \
@@ -175,7 +184,10 @@ class Node:
 
             self._current_file = {
                 "filename": groups["filename"],
-                "handle": open(os.path.join(downloads_path, groups["filename"]), "wb")
+                "handle": open(
+                    os.path.join(downloads_path, groups["filename"]),
+                    "wb"
+                )
             }
 
             self.new_messages.append(Message(
@@ -194,11 +206,13 @@ class Node:
         if self._current_file:
             self._current_file["handle"].close()
             if self._is_console:
-                print(f"File {self._current_file["filename"]} was successfully saved")
+                print(f"File {self._current_file["filename"]} "
+                      f"was successfully saved")
 
             self._current_file = None
         else:
-            raise ValueError("Received end of file marker, but no file was saving")
+            raise ValueError("Received end of file marker, "
+                             "but no file was saving")
 
     def handle_message(self, data_bytes: bytes):
         """

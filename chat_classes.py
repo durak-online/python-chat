@@ -91,7 +91,8 @@ class ChatHistory:
 
                     self.name = loaded_info.chat_name
                     self.messages = [
-                        Message.from_dict(item) for item in loaded_info.messages
+                        Message.from_dict(item)
+                        for item in loaded_info.messages
                     ]
                 else:
                     self.name = self.contact.username

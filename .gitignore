@@ -11,6 +11,7 @@ contacts.json
 config.json
 chat_downloads/
 history/
+python-chat.zip
 
 # Distribution / packaging
 .Python
