@@ -1,5 +1,6 @@
 import argparse
 import unittest
+from argparse import Namespace
 from unittest.mock import patch, MagicMock
 
 from chat import Chat
@@ -8,9 +9,11 @@ from contacts import Contact
 
 class ChatTests(unittest.TestCase):
     def setUp(self):
-        self.patcher_argparse = patch("argparse.ArgumentParser.parse_args",
-                                      return_value=argparse.Namespace(local=True))
-        self.mock_args = self.patcher_argparse.start()
+        self.test_args = Namespace(
+            local=True,
+            console=True,
+            port=8000
+        )
 
         self.patcher_userconfig = patch("chat.UserConfig")
         self.mock_userconfig = self.patcher_userconfig.start()
@@ -23,10 +26,9 @@ class ChatTests(unittest.TestCase):
         self.mock_node_instance = MagicMock()
         self.mock_node.return_value = self.mock_node_instance
 
-        self.chat = Chat()
+        self.chat = Chat(self.test_args)
 
     def tearDown(self):
-        self.patcher_argparse.stop()
         self.patcher_userconfig.stop()
         self.patcher_node.stop()
 
@@ -94,8 +96,12 @@ class ChatTests(unittest.TestCase):
     def test_public_ip_detection(self, mock_gethost):
         mock_gethost.return_value = "192.168.1.100"
         with patch("builtins.print") as mock_print:
-            self.mock_args.return_value = argparse.Namespace(local=False)
-            chat = Chat()
+            test_args = Namespace(
+            local=False,
+            console=True,
+            port=8000
+        )
+            chat = Chat(test_args)
             mock_print.assert_any_call(f"Your IPv4 in current wifi is 192.168.1.100. Share it with others")
 
 

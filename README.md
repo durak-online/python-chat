@@ -27,19 +27,19 @@ cd python-chat
 ## Launch Options 🖥️
 ```bash
 # Basic startup
-python chat.py
+python main.py
 
 # Localhost mode
-python chat.py -l
+python main.py -l
 
 # Console-only mode
-python chat.py -c
+python main.py -c
 
 # Custom port configuration
-python chat.py -p 9000
+python main.py -p 9000
 
 # Combined options
-python chat.py -l -p 8000  # Localhost on port 8000
+python main.py -l -p 8000  # Localhost on port 8000
 ```
 
 ## Console Commands 🔧

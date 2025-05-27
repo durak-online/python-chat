@@ -1,27 +1,20 @@
-import argparse
 import socket
 import sys
+from argparse import Namespace
 from threading import Thread
 
-from chat_ui import ChatUI
 from contacts import Contact
 from node import Node
 from user_config import UserConfig
 
-parser = argparse.ArgumentParser(description="Distributed Chat Application")
-parser.add_argument("-l", "--local", action="store_true", help="Run on localhost")
-parser.add_argument("-c", "--console", action="store_true", help="Run without UI")
-parser.add_argument("-p", "--port", type=int, help="Port to run the application on")
-args = parser.parse_args()
-
 
 class Chat:
-    def __init__(self):
+    def __init__(self, args: Namespace):
+        self.args = args
         self.config = UserConfig()
         self.node = self.get_node()
         self.receive_thread = Thread(target=self.node.receive_messages,
                                      daemon=True, args=(self.config.downloads_dir,))
-        self.receive_thread.start()
 
     @staticmethod
     def print_help():
@@ -41,6 +34,7 @@ class Chat:
         print(f"App starts on {self.node.host}:{self.node.port}")
 
         try:
+            self.receive_thread.start()
             self.chat_cycle()
         except Exception as e:
             print(e)
@@ -152,15 +146,15 @@ class Chat:
     def get_node(self) -> Node:
         """Returns new Node instance, which depends on --local argument"""
         port = self.config.server_port
-        if args.port:
-            port = args.port
+        if self.args.port:
+            port = self.args.port
 
-        if args.local:
+        if self.args.local:
             node = Node(
                 port=port,
                 username=self.config.username,
                 public_ip="localhost",
-                is_console=args.console
+                is_console=self.args.console
             )
         else:
             public_ip = socket.gethostbyname(socket.gethostname())
@@ -169,18 +163,9 @@ class Chat:
                 port=port,
                 username=self.config.username,
                 public_ip=public_ip,
-                is_console=args.console
+                is_console=self.args.console
             )
 
             print(f"Your IPv4 in current wifi is {public_ip}. Share it with others")
             print(f"Your username is {node.username}")
         return node
-
-
-if __name__ == "__main__":
-    chat = Chat()
-    if not args.console:
-        ui = ChatUI(chat.node, chat.config)
-        ui.run()
-    else:
-        chat.run()
