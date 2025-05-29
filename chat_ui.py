@@ -93,7 +93,11 @@ class ChatUI:
             target=self.receive_messages,
             daemon=True
         )
-        self.update_thread.start()
+        self.receive_messages_thread = Thread(
+            target=self.node.receive_messages,
+            args=(self.config.downloads_dir,),
+            daemon=True
+        )
 
     def start_new_chat(self):
         """
@@ -316,6 +320,8 @@ class ChatUI:
 
     def run(self):
         """Runs chat"""
+        self.update_thread.start()
+        self.receive_messages_thread.start()
         self.root.mainloop()
 
     def on_close(self):
@@ -326,4 +332,5 @@ class ChatUI:
             chat.save_chat()
         self.node.close()
         self.update_thread.join(timeout=2)
+        self.receive_messages_thread.join(timeout=2)
         sys.exit(0)
