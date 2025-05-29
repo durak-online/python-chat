@@ -9,7 +9,7 @@ from chat_classes import Message, ChatInfo, ChatHistory
 from contacts import Contact
 
 
-class MessageTests(unittest.TestCase):
+class TestMessage(unittest.TestCase):
     def setUp(self):
         self.contact = Contact(
             host="127.0.0.1",
@@ -46,7 +46,7 @@ class MessageTests(unittest.TestCase):
         self.assertEqual(new_message.message_type, self.message.message_type)
 
 
-class ChatInfoTests(unittest.TestCase):
+class TestChatInfo(unittest.TestCase):
     def setUp(self):
         contact = Contact(host="127.0.0.1", port=1234, username="test_user")
         self.message = Message(
@@ -76,7 +76,7 @@ class ChatInfoTests(unittest.TestCase):
         self.assertEqual(chat_info.messages[0]["content"], "Hello, world!")
 
 
-class ChatHistoryTest(unittest.TestCase):
+class TestChatHistory(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
         self.patcher = patch('chat_classes.HISTORY_DIR', self.temp_dir)

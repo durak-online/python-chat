@@ -5,7 +5,7 @@ import user_config
 from user_config import UserConfig
 
 
-class UserConfigTests(unittest.TestCase):
+class TestUserConfig(unittest.TestCase):
     def __init__(self, method_name="run_tests"):
         super().__init__(method_name)
         self.config = UserConfig()

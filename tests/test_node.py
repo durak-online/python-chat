@@ -1,12 +1,16 @@
 import os
+import socket
+import threading
+import time
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
+from chat_classes import Message
 from node import Node, MESSAGE_REGEX, HEADER_REGEX, \
     MSG_TYPE_TEXT, MSG_TYPE_FILE_META, MSG_TYPE_FILE_DATA, MSG_TYPE_FILE_END
 
 
-class NodeTests(unittest.TestCase):
+class TestNode(unittest.TestCase):
     def setUp(self):
         self.node = Node(
             host="localhost",
@@ -15,12 +19,15 @@ class NodeTests(unittest.TestCase):
             public_ip="127.0.0.1"
         )
         self.test_file = "test_file.txt"
+        self.test_dir = "test_dir"
         with open(self.test_file, "w") as f:
             f.write("test content")
 
     def tearDown(self):
         if os.path.exists(self.test_file):
             os.remove(self.test_file)
+        if os.path.exists(self.test_dir):
+            os.remove(self.test_dir)
 
     def test_initialization(self):
         self.assertEqual(self.node.host, "localhost")
@@ -158,6 +165,61 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(("127.0.0.1", 8001), result_message.sender.self)
         self.assertEqual("test message", result_message.content)
         self.assertEqual("text", result_message.message_type)
+
+    def test_receive_text_message(self):
+        server_thread = threading.Thread(
+            target=self.node.receive_messages,
+            args=(self.test_dir,),
+            daemon=True
+        )
+        server_thread.start()
+
+        time.sleep(0.1)
+        server_port = self.node._server_socket.getsockname()[1]
+
+        test_message = "Hello, world!"
+        message_text = (f"SENDER:sender_user 127.0.0.1:8000 | "
+                        f"MESSAGE:{test_message}")
+        message_bytes = message_text.encode("utf-8")
+        data = (bytes([MSG_TYPE_TEXT])
+                + len(message_bytes).to_bytes(4, "big")
+                + message_bytes)
+
+        with (socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+              as client_socket):
+            client_socket.connect(("localhost", server_port))
+            client_socket.sendall(data)
+
+        time.sleep(0.1)
+
+        self.assertEqual(len(self.node.new_messages), 1)
+        message = self.node.new_messages[0]
+        self.assertIsInstance(message, Message)
+        self.assertEqual(message.content, test_message)
+        self.assertEqual(message.message_type, "text")
+        self.assertEqual(message.sender.username, "sender_user")
+        self.assertEqual(message.sender.host, "127.0.0.1")
+        self.assertEqual(message.sender.port, 8000)
+
+    def test_close_stops_server(self):
+        mock_socket = MagicMock()
+        self.node._server_socket = mock_socket
+
+        server_thread = threading.Thread(
+            target=self.node.receive_messages,
+            args=("/test",),
+            daemon=True
+        )
+        server_thread.start()
+
+        time.sleep(0.1)
+        self.node.close()
+
+        mock_socket.close.assert_called_once()
+        self.assertFalse(self.node._is_running)
+
+        server_thread.join(timeout=1.0)
+        self.assertFalse(server_thread.is_alive())
 
 
 if __name__ == "__main__":

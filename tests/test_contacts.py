@@ -5,7 +5,7 @@ import contacts
 from contacts import Contact, Contacts, DEFAULT_NAME
 
 
-class ContactTests(unittest.TestCase):
+class TestContact(unittest.TestCase):
     def test_init(self):
         contact = Contact("192.168.0.0", 8000)
         self.assertIsNotNone(contact)
@@ -37,8 +37,21 @@ class ContactTests(unittest.TestCase):
         self.assertEqual(8000, contact.port)
         self.assertEqual(DEFAULT_NAME, contact.username)
 
+    def test_eq(self):
+        contact1 = Contact("192.168.0.0", 8000)
+        contact2 = Contact("192.168.1.1", 8080)
+        not_contact = []
 
-class ContactsTests(unittest.TestCase):
+        self.assertEqual(contact1, contact1)
+        self.assertNotEqual(contact1, contact2)
+        self.assertNotEqual(contact1, not_contact)
+
+    def test_repr(self):
+        contact = Contact("192.168.0.0", 8000)
+        self.assertEqual(f"Contact:{DEFAULT_NAME} (192.168.0.0:8000)", repr(contact))
+
+
+class TestContacts(unittest.TestCase):
     def __init__(self, method_name="run_tests"):
         super().__init__(method_name)
         self.base = Contacts()
@@ -70,6 +83,12 @@ class ContactsTests(unittest.TestCase):
         self.base.load_contacts()
         self.assertEqual(1, len(self.base.contacts))
         self.assertEqual(Contact("localhost", 8000), self.base.contacts[0])
+
+    def test_load_with_no_file(self):
+        with open(contacts.CONTACTS_FILE, "w") as f:
+            f.write("{123[")
+        self.base.load_contacts()
+        self.assertEqual([], self.base.contacts)
 
     def test_get_peer_by_host(self):
         self.base.clear()
