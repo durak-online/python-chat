@@ -40,7 +40,8 @@ class TestChat(unittest.TestCase):
 
         expected_output = [
             "This is a chat. There are available commands:",
-            "  /add <username> <peer_host> <peer_port>   Adds new peer to known",
+            "  /add <username> <peer_host> <peer_port>   "
+            "Adds new peer to known",
             "  /send <username> <message>   Sends a message to peer",
             "  /sendfile <username> <path_to_file>   Sends a file to peer",
             "  /list   Prints list of known peers",
@@ -91,11 +92,15 @@ class TestChat(unittest.TestCase):
 
     def test_add_command(self):
         mocks = self.simulate_commands(["/add user1 127.0.0.1 8000", "/exit"])
-        mocks["add_contact"].assert_called_once_with("/add user1 127.0.0.1 8000")
+        mocks["add_contact"].assert_called_once_with(
+            "/add user1 127.0.0.1 8000"
+        )
 
     def test_send_command(self):
         mocks = self.simulate_commands(["/send user1 Hello world!", "/exit"])
-        mocks["send_message"].assert_called_once_with("/send user1 Hello world!")
+        mocks["send_message"].assert_called_once_with(
+            "/send user1 Hello world!"
+        )
 
     def test_sendfile_command(self):
         mocks = self.simulate_commands(["/sendfile user1 data.txt", "/exit"])

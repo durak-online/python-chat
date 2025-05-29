@@ -65,7 +65,8 @@ class TestNode(unittest.TestCase):
                          + len(expected_message).to_bytes(4, "big")
                          + expected_message)
 
-        mock_socket.return_value.__enter__.return_value.connect.assert_called_with(("127.0.0.1", 8001))
+        (mock_socket.return_value.__enter__
+         .return_value.connect.assert_called_with(("127.0.0.1", 8001)))
         mock_conn.sendall.assert_called_once_with(expected_data)
 
     @patch("socket.socket")

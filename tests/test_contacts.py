@@ -48,7 +48,9 @@ class TestContact(unittest.TestCase):
 
     def test_repr(self):
         contact = Contact("192.168.0.0", 8000)
-        self.assertEqual(f"Contact:{DEFAULT_NAME} (192.168.0.0:8000)", repr(contact))
+        self.assertEqual(
+            f"Contact:{DEFAULT_NAME} (192.168.0.0:8000)", repr(contact)
+        )
 
 
 class TestContacts(unittest.TestCase):

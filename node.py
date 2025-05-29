@@ -72,9 +72,9 @@ class Node:
                            f"{self.public_ip}:{self.port} | "
                            f"MESSAGE:{message}")
                 message_bytes = message.encode("utf-8")
-                data = bytes([MSG_TYPE_TEXT]) \
-                       + len(message_bytes).to_bytes(4, "big") \
-                       + message_bytes
+                data = (bytes([MSG_TYPE_TEXT])
+                        + len(message_bytes).to_bytes(4, "big")
+                        + message_bytes)
                 s.sendall(data)
             except ConnectionError as e:
                 print(f"Can't send message to {peer_host}:{peer_port}: {e}")
@@ -89,12 +89,14 @@ class Node:
                 s.connect((peer_host, peer_port))
 
                 filename = os.path.basename(path)
-                meta_data = (f"SENDER:{self.username} {self.public_ip}:{self.port} | "
-                             f"FILENAME:{filename}").encode("utf-8")
+                meta_data = (
+                    f"SENDER:{self.username} {self.public_ip}:{self.port} | "
+                    f"FILENAME:{filename}"
+                ).encode("utf-8")
 
-                header = bytes([MSG_TYPE_FILE_META]) \
-                         + len(meta_data).to_bytes(4, "big") \
-                         + meta_data
+                header = (bytes([MSG_TYPE_FILE_META])
+                          + len(meta_data).to_bytes(4, "big")
+                          + meta_data)
                 s.sendall(header)
 
                 with open(path, "rb") as file:
@@ -102,8 +104,8 @@ class Node:
                         chunk = file.read(4096)
                         if not chunk:
                             break
-                        chunk_header = bytes([MSG_TYPE_FILE_DATA]) \
-                                       + len(chunk).to_bytes(4, "big")
+                        chunk_header = (bytes([MSG_TYPE_FILE_DATA])
+                                        + len(chunk).to_bytes(4, "big"))
                         s.sendall(chunk_header + chunk)
 
                 end_marker = bytes([MSG_TYPE_FILE_END])
